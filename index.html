@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Builderland</title>
+  <meta name="description" content="Build your own hand-drawn land: plots for builders, buildings for tools, every knob procedural. Open source." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/",
+        "gsap": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/index.js"
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --paper: #FBF5E8;
+      --paper-2: #F3EAD6;
+      --ink: #2B2530;
+      --muted: #7D7164;
+      --green: #6E9A4E;
+      --shadow: 0 4px 0 rgba(43, 37, 48, 0.85);
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    html, body { margin: 0; height: 100%; background: #F1EBDD; color: var(--ink); font-family: Fredoka, ui-rounded, system-ui, sans-serif; overflow: hidden; }
+    #stage { position: fixed; inset: 0; }
+    button, input, select { font-family: inherit; color: var(--ink); }
+
+    .card { background: var(--paper); border: 3px solid var(--ink); border-radius: 14px; box-shadow: var(--shadow); }
+    .btn { border: 2.5px solid var(--ink); background: var(--paper); border-radius: 10px; padding: 8px 14px; font-size: 15px; font-weight: 500; cursor: pointer; box-shadow: 0 3px 0 var(--ink); transition: transform .06s, box-shadow .06s; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
+    .btn:active { transform: translateY(3px); box-shadow: 0 0 0 var(--ink); }
+    .btn.go { background: var(--green); color: #FFFDF6; }
+    .btn.sm { padding: 5px 10px; font-size: 13px; }
+
+    #title { position: fixed; top: 16px; left: 16px; padding: 14px 16px; width: 300px; max-width: calc(100vw - 32px); }
+    #title h1 { margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.01em; }
+    #title p { margin: 4px 0 12px; color: var(--muted); font-size: 14px; line-height: 1.35; }
+    #title .row { display: flex; gap: 8px; }
+
+    #resident { position: fixed; top: 200px; left: 16px; width: 300px; max-width: calc(100vw - 32px); padding: 14px; display: none; }
+    #resident.on { display: block; }
+    #resident .head { display: flex; gap: 12px; align-items: center; }
+    #resident .av { width: 84px; height: 84px; border: 3px solid var(--ink); border-radius: 12px; object-fit: cover; background: var(--paper-2); flex-shrink: 0; }
+    #resident h2 { margin: 0; font-size: 21px; font-weight: 600; line-height: 1.1; }
+    #resident .role { color: var(--muted); font-size: 14px; margin-top: 3px; }
+    #resident .bar { height: 10px; border: 2px solid var(--ink); border-radius: 6px; margin-top: 8px; }
+    #resident .links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    #resident .work { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 12px; }
+    #resident .work img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border: 2px solid var(--ink); border-radius: 8px; background: var(--paper-2); }
+    #resident .x { position: absolute; top: 8px; right: 10px; border: 0; background: none; font-size: 18px; cursor: pointer; }
+    #resident .foot { display: flex; gap: 6px; margin-top: 12px; }
+
+    #toolbar { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; padding: 6px; gap: 0; }
+    #toolbar button { border: 0; border-right: 2px solid rgba(43,37,48,.25); background: none; padding: 8px 18px 6px; cursor: pointer; display: grid; justify-items: center; gap: 2px; font-size: 14px; font-weight: 500; }
+    #toolbar button:last-child { border-right: 0; }
+    #toolbar button .i { font-size: 20px; line-height: 1; }
+    #toolbar button:hover { background: var(--paper-2); border-radius: 8px; }
+
+    #find { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); width: 320px; padding: 10px; display: none; }
+    #find.on { display: block; }
+    #find input { width: 100%; border: 2.5px solid var(--ink); border-radius: 10px; padding: 8px 10px; font-size: 15px; background: #fff; outline: none; }
+    #find ul { list-style: none; margin: 8px 0 0; padding: 0; max-height: 260px; overflow: auto; }
+    #find li { display: flex; align-items: center; gap: 10px; padding: 6px; border-radius: 8px; cursor: pointer; }
+    #find li:hover { background: var(--paper-2); }
+    #find li img { width: 30px; height: 30px; border: 2px solid var(--ink); border-radius: 8px; }
+    #find li small { color: var(--muted); }
+
+    #claim { position: fixed; inset: 0; background: rgba(43,37,48,.35); display: none; place-items: center; z-index: 5; }
+    #claim.on { display: grid; }
+    #claim form { width: 420px; max-width: calc(100vw - 32px); max-height: calc(100vh - 32px); overflow: auto; padding: 18px; }
+    #claim h2 { margin: 0 0 2px; font-size: 22px; }
+    #claim .sub { color: var(--muted); font-size: 14px; margin-bottom: 8px; }
+    #claim label { display: block; margin-top: 12px; font-size: 14px; font-weight: 500; }
+    #claim input[type=text], #claim input[type=url] { width: 100%; margin-top: 5px; border: 2.5px solid var(--ink); border-radius: 10px; padding: 8px 10px; font-size: 15px; background: #fff; outline: none; }
+    #claim .swatches { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+    #claim .swatches button { width: 30px; height: 30px; border-radius: 8px; border: 2.5px solid var(--ink); cursor: pointer; }
+    #claim .swatches button[aria-pressed=true] { outline: 3px solid var(--ink); outline-offset: 2px; }
+    #claim .file { display: flex; gap: 8px; align-items: center; margin-top: 6px; font-size: 13px; color: var(--muted); }
+    #claim .actions { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
+    #claim .note { font-size: 12px; color: var(--muted); margin-top: 10px; }
+
+
+    #build { position: fixed; top: 16px; right: 16px; bottom: 100px; width: 340px; max-width: calc(100vw - 32px); display: none; flex-direction: column; overflow: hidden; }
+    #build.on { display: flex; }
+    #build .bhead { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px 6px; font-size: 17px; }
+    #build .x { border: 0; background: none; font-size: 18px; cursor: pointer; }
+    #build .btabs { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px 12px 8px; border-bottom: 2px solid rgba(43,37,48,.15); }
+    #build .btabs button { border: 2px solid var(--ink); background: var(--paper); border-radius: 8px; padding: 3px 9px; font-size: 13px; cursor: pointer; }
+    #build .btabs button[aria-selected=true] { background: var(--ink); color: var(--paper); }
+    #build .bbody { overflow: auto; padding: 8px 14px 16px; flex: 1; }
+    .ctl { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px 10px; padding: 7px 0; border-bottom: 1.5px dashed rgba(43,37,48,.18); font-size: 14px; }
+    .ctl .val { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .ctl input[type=range] { grid-column: span 2; width: 100%; accent-color: var(--ink); margin: 2px 0 0; }
+    .ctl select, .ctl input[type=color] { border: 2px solid var(--ink); border-radius: 8px; background: #fff; padding: 2px 6px; font-size: 13px; }
+    .ctl input[type=color] { width: 44px; height: 28px; padding: 1px; }
+    .ctl input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--ink); }
+    .presets { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 4px; }
+    .place { border: 2.5px solid var(--ink); border-radius: 12px; padding: 8px 10px; margin-top: 10px; background: #fff; }
+    .place .ph { display: flex; gap: 6px; align-items: center; }
+    .place .ph input { flex: 1; border: 2px solid var(--ink); border-radius: 8px; padding: 4px 8px; font-size: 14px; }
+    .place .ph button { border: 0; background: none; font-size: 18px; cursor: pointer; color: var(--muted); }
+    .place .pg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 8px; margin-top: 6px; font-size: 12px; color: var(--muted); }
+    .place .pg input, .place .pg select { width: 100%; border: 2px solid var(--ink); border-radius: 8px; padding: 3px 6px; font-size: 13px; background: #fff; color: var(--ink); margin-top: 2px; }
+    .place .pg input[type=color] { height: 28px; padding: 1px; }
+    .place .pg .wide { grid-column: span 2; }
+    .hint { font-size: 12px; color: var(--muted); line-height: 1.45; margin-top: 8px; }
+    .bbody label.field { display: block; font-size: 14px; margin-top: 10px; }
+    .bbody label.field input[type=text] { width: 100%; margin-top: 4px; border: 2.5px solid var(--ink); border-radius: 10px; padding: 6px 9px; font-size: 15px; background: #fff; }
+    .bbody .stack { display: grid; gap: 8px; margin-top: 12px; }
+    #editor { position: fixed; top: 16px; right: 16px; width: 330px; max-width: calc(100vw - 32px); max-height: calc(100vh - 120px); overflow: auto; padding: 0 0 12px; display: none; }
+    #editor.on { display: block; }
+    #editor .ehead { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px 6px; font-size: 17px; }
+    #editor .x { border: 0; background: none; font-size: 18px; cursor: pointer; }
+    #editor .etabs { display: flex; gap: 4px; padding: 0 12px 8px; }
+    #editor .etabs button { flex: 1; border: 2px solid var(--ink); background: var(--paper); border-radius: 8px; padding: 4px 6px; font-size: 13px; cursor: pointer; }
+    #editor .etabs button[aria-selected=true] { background: var(--ink); color: var(--paper); }
+    #editor .tools { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 0 12px; }
+    #editor .tool { border: 2px solid var(--ink); background: #fff; border-radius: 10px; padding: 6px 2px 4px; font-size: 12px; cursor: pointer; display: grid; justify-items: center; gap: 1px; }
+    #editor .tool span { font-size: 20px; line-height: 1.1; }
+    #editor .tool[aria-pressed=true] { background: var(--ink); color: var(--paper); }
+    #editor .erow { display: flex; gap: 6px; padding: 10px 12px 0; flex-wrap: wrap; }
+    #editor .btn[disabled] { opacity: .45; cursor: default; }
+    #editor .hint, #editor .field { padding: 0 14px; }
+    #editor .field { display: block; font-size: 13px; margin-top: 8px; }
+    #editor .field select { width: 100%; margin-top: 4px; border: 2px solid var(--ink); border-radius: 8px; padding: 4px 6px; background: #fff; font-family: inherit; }
+    .editing #resident, .editing #find { display: none !important; }
+    .hide-ui #editor, .recording #editor { display: none !important; }
+    #credit { position: fixed; left: 16px; bottom: 16px; padding: 6px 12px; font-size: 13px; color: var(--muted); }
+    #credit a { color: var(--ink); text-decoration: none; font-weight: 500; }
+    #credit a:hover { text-decoration: underline; }
+    .hide-ui #credit, .recording #credit, .editing #credit { display: none !important; }
+    @media (max-width: 900px) { #credit { display: none; } }
+    #toast { position: fixed; left: 50%; top: 18px; transform: translate(-50%, -20px); padding: 10px 16px; opacity: 0; transition: .25s; pointer-events: none; z-index: 6; font-size: 15px; }
+    #toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .hide-ui #build, .recording #build, .hide-ui #title, .hide-ui #resident, .hide-ui #toolbar, .hide-ui #find, .recording #title, .recording #resident, .recording #toolbar, .recording #find { display: none !important; }
+    @media (max-width: 700px) { #resident { top: auto; bottom: 96px; } #toolbar button { padding: 8px 10px 6px; font-size: 12px; } }
+  </style>
+</head>
+<body>
+  <div id="stage"></div>
+
+  <section id="title" class="card">
+    <h1 id="landTitle">Builderland</h1>
+    <p><span id="count">0</span> builders live here. Every plot is a person, every building a tool. Build your own land with ⚙ Build.</p>
+    <div class="row">
+      <button class="btn go" id="claimBtn">✿ Claim a plot</button>
+      <button class="btn" id="tourBtn">Take a walk</button>
+    </div>
+  </section>
+
+  <section id="resident" class="card" aria-live="polite">
+    <button class="x" id="closeRes" aria-label="Close">✕</button>
+    <div class="head">
+      <img class="av" id="resAv" alt="" />
+      <div>
+        <h2 id="resName"></h2>
+        <div class="role" id="resRole"></div>
+        <div class="bar" id="resBar"></div>
+      </div>
+    </div>
+    <div class="links" id="resLinks"></div>
+    <div class="work" id="resWork"></div>
+    <div class="foot">
+      <button class="btn sm" id="copyPlot">Copy link</button>
+      <button class="btn sm" id="cardPlot">Share card</button>
+      <button class="btn sm" id="removePlot" hidden>Remove my plot</button>
+    </div>
+  </section>
+
+  <nav id="toolbar" class="card" aria-label="Tools">
+    <button id="tOverview"><span class="i">🗺</span>Overview</button>
+    <button id="tFind"><span class="i">⌕</span>Find</button>
+    <button id="tClaim"><span class="i">✿</span>Claim</button>
+    <button id="tLight"><span class="i" id="lightIcon">☾</span><span id="lightLabel">Night</span></button>
+    <button id="tEdit"><span class="i">✎</span>Edit</button>
+    <button id="tBuild"><span class="i">⚙</span>Build</button>
+    <button id="tRecord"><span class="i">●</span>Record</button>
+  </nav>
+
+
+  <aside id="build" class="card" aria-label="Build your land">
+    <div class="bhead"><strong>Build your land</strong><button class="x" id="closeBuild" aria-label="Close">✕</button></div>
+    <div class="btabs" role="tablist"></div>
+    <div class="bbody" id="buildBody"></div>
+  </aside>
+
+  <aside id="editor" class="card" aria-label="Edit your land"></aside>
+
+  <section id="find" class="card">
+    <input id="findInput" placeholder="Find a designer…" autocomplete="off" />
+    <ul id="findList"></ul>
+  </section>
+
+  <div id="claim" role="dialog" aria-modal="true" aria-labelledby="claimTitle">
+    <form class="card" id="claimForm">
+      <h2 id="claimTitle">Claim a plot</h2>
+      <div class="sub">You get a 2×2 garden: your face on a paper standee, your work on an easel, your links on a signpost.</div>
+      <label>Name<input type="text" id="cName" required maxlength="40" placeholder="Your name" /></label>
+      <label>What you do<input type="text" id="cRole" maxlength="40" placeholder="Product designer" /></label>
+      <label>Your colour<div class="swatches" id="cColors"></div></label>
+      <label>Avatar <span class="file"><input type="file" id="cAvatar" accept="image/*" /> optional. We'll draw you one otherwise.</span></label>
+      <label>Work (up to 3 images) <span class="file"><input type="file" id="cWork" accept="image/*" multiple /></span></label>
+      <label>Portfolio<input type="url" id="cSite" placeholder="https://…" /></label>
+      <label>X / Instagram / Dribbble<input type="url" id="cSocial" placeholder="https://…" /></label>
+      <div class="actions">
+        <button type="button" class="btn" id="cCancel">Cancel</button>
+        <button type="submit" class="btn go">Move in ✿</button>
+      </div>
+      <div class="note">Preview build: your plot is saved in this browser only. Public sign-ups come next.</div>
+    </form>
+  </div>
+
+  <div id="credit" class="card">made by <a href="https://x.com/noormtir" target="_blank" rel="noopener">@noormtir</a> · <a href="https://donate.stripe.com/9B68wPcAl5vQdtOgqmfrW0g" target="_blank" rel="noopener">buy me a coffee ☕</a></div>
+  <div id="toast" class="card"></div>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

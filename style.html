@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Builderland Style Board</title>
+  <meta name="description" content="every Builderland asset on a turntable in day, golden hour and night, with the palette checked against its rules." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/",
+        "gsap": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/index.js"
+      }
+    }
+  </script>
+  <style>
+    :root { --paper: #FBF5E8; --paper-2: #F3EAD6; --bg: #F1EBDD; --ink: #2B2530; --muted: #7D7164; --ok: #4F8A3E; --warn: #C8612F; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: Fredoka, ui-rounded, system-ui, sans-serif; }
+    body { padding: 20px 16px 60px; }
+    main { max-width: 1600px; margin: 0 auto; }
+    button { font-family: inherit; color: var(--ink); }
+    .card { background: var(--paper); border: 3px solid var(--ink); border-radius: 14px; box-shadow: 0 4px 0 rgba(43, 37, 48, .85); }
+    .btn { border: 2.5px solid var(--ink); background: var(--paper); border-radius: 10px; padding: 6px 12px; font-size: 14px; font-weight: 500; cursor: pointer; box-shadow: 0 3px 0 var(--ink); transition: transform .06s, box-shadow .06s; }
+    .btn:active { transform: translateY(3px); box-shadow: 0 0 0 var(--ink); }
+    .btn[aria-pressed=true] { background: var(--ink); color: var(--paper); }
+    .seg { display: inline-flex; }
+    .seg .btn { border-radius: 0; margin-left: -2.5px; }
+    .seg .btn:first-child { border-radius: 10px 0 0 10px; margin-left: 0; }
+    .seg .btn:last-child { border-radius: 0 10px 10px 0; }
+
+    header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 16px; margin-bottom: 18px; }
+    header h1 { margin: 0; font-size: 30px; font-weight: 600; letter-spacing: -0.01em; }
+    header p { margin: 4px 0 0; color: var(--muted); max-width: 680px; line-height: 1.4; }
+    header a { color: inherit; }
+    .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+    h2 { font-size: 20px; font-weight: 600; margin: 30px 0 10px; }
+    .lights { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .light { position: relative; overflow: hidden; padding: 0; }
+    .light .view { position: relative; aspect-ratio: 1 / 1.08; }
+    .light canvas { border-radius: 0 0 11px 11px; }
+    .light .cap { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 12px; border-bottom: 2.5px solid var(--ink); font-size: 15px; }
+    .light .cap small { color: var(--muted); font-size: 12px; }
+    .labels { position: absolute; inset: 0; pointer-events: none; }
+    .labels span { position: absolute; transform: translate(-50%, 0); white-space: nowrap; font-size: 11px; font-weight: 500; background: rgba(255, 251, 243, .92); border: 1.5px solid var(--ink); border-radius: 6px; padding: 0 5px; line-height: 16px; }
+    .labels span small { color: var(--muted); font-weight: 400; }
+    .gray canvas, .gray .sw { filter: grayscale(1); }
+
+    .assets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .assets .btn { padding: 4px 10px; font-size: 13px; box-shadow: 0 2px 0 var(--ink); }
+    .assets .btn small { color: var(--muted); margin-left: 4px; }
+    .assets .btn[aria-pressed=true] small { color: #CFC6B8; }
+
+    .grid2 { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 14px; }
+    .pad { padding: 14px 16px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { text-align: left; font-weight: 500; color: var(--muted); font-size: 12px; padding: 4px 6px; }
+    td { padding: 6px; border-top: 1.5px dashed rgba(43, 37, 48, .18); vertical-align: middle; }
+    .row-sw { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tok { display: inline-grid; grid-template-columns: 34px auto; gap: 0 6px; align-items: center; font-size: 11px; line-height: 1.25; font-variant-numeric: tabular-nums; }
+    .sw { width: 34px; height: 34px; border: 2px solid var(--ink); border-radius: 8px; grid-row: span 3; }
+    .chip { display: inline-block; border-radius: 6px; padding: 0 5px; font-size: 10.5px; font-weight: 500; }
+    .chip.ok { background: #DDEBD3; color: #2F5A22; }
+    .chip.bad { background: #F7D8C8; color: #8A3412; }
+    .fix { color: var(--muted); }
+    .fix i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; border: 1px solid var(--ink); vertical-align: -1px; margin-right: 2px; }
+
+    .bar { display: flex; height: 26px; border: 2.5px solid var(--ink); border-radius: 8px; overflow: hidden; margin: 8px 0 4px; }
+    .bar div { display: grid; place-items: center; font-size: 12px; font-weight: 500; }
+    .legend { font-size: 12px; color: var(--muted); }
+    .values { display: flex; height: 40px; border: 2.5px solid var(--ink); border-radius: 8px; overflow: hidden; margin-top: 8px; }
+    .values div { flex: 1; filter: grayscale(1); }
+    ul.check { margin: 6px 0 0; padding-left: 20px; line-height: 1.55; font-size: 14px; }
+    ul.check li::marker { content: '☐  '; }
+    .tiers td:first-child { font-weight: 600; width: 32px; }
+    .note { color: var(--muted); font-size: 13px; line-height: 1.45; margin-top: 8px; }
+    code { font-size: 12.5px; background: var(--paper-2); border-radius: 4px; padding: 0 4px; }
+
+    @media (max-width: 1000px) {
+      .lights { grid-template-columns: 1fr; }
+      .grid2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Builderland style board</h1>
+        <p>Every asset spins on a turntable in day, golden hour and night, drawn by the same passes as <a href="./">the land</a>. Colours come from <code>src/tokens.js</code> and are checked against the rules below. Drag any view to orbit all three. Click an asset to compare it up close.</p>
+      </div>
+      <div class="controls">
+        <div class="seg" role="group" aria-label="Scale">
+          <button class="btn" data-scale="fit" aria-pressed="true">Fit</button>
+          <button class="btn" data-scale="true" aria-pressed="false">True scale</button>
+        </div>
+        <div class="seg" role="group" aria-label="Drawing style">
+          <button class="btn" data-style="moebius" aria-pressed="true">Moebius</button>
+          <button class="btn" data-style="ink" aria-pressed="false">Ink</button>
+        </div>
+        <button class="btn" id="gray" aria-pressed="false">Value check</button>
+        <button class="btn" id="spin" aria-pressed="false">Pause</button>
+        <button class="btn" id="png">Save PNGs</button>
+      </div>
+    </header>
+
+    <section class="lights" id="lights"></section>
+    <div class="assets" id="assets" aria-label="Assets"></div>
+
+    <div class="grid2">
+      <section>
+        <h2>Palette</h2>
+        <div class="card pad">
+          <table>
+            <thead><tr><th>Role</th><th>Tokens · HSL saturation / lightness · check</th></tr></thead>
+            <tbody id="palette"></tbody>
+          </table>
+          <p class="note" id="paletteNote"></p>
+        </div>
+      </section>
+      <section>
+        <h2>Balance</h2>
+        <div class="card pad">
+          <strong>60 / 30 / 10</strong>
+          <div class="bar" id="share"></div>
+          <div class="legend">Nature and paper · built neutrals · accents. Accents above 70% saturation stay inside the 10%.</div>
+          <p style="margin:16px 0 0"><strong>Value strip</strong></p>
+          <div class="values" id="values"></div>
+          <div class="legend">Every token in grey, light to dark. Ground should read light, darks only for ink, trunks and windows.</div>
+        </div>
+        <h2>Size tiers</h2>
+        <div class="card pad">
+          <table class="tiers">
+            <thead><tr><th>Tier</th><th>Footprint</th><th>Height</th><th>Examples</th></tr></thead>
+            <tbody>
+              <tr><td>S</td><td>1 tile</td><td>≤ 1</td><td>props, benches, lamps</td></tr>
+              <tr><td>M</td><td>2×2 lot</td><td>1–2</td><td>plots, shops, food trucks</td></tr>
+              <tr><td>L</td><td>1 parcel</td><td>3–4</td><td>lab, HQ, logo landmark</td></tr>
+              <tr><td>XL</td><td>2×2 parcels</td><td>5–7</td><td>Creator Mall, Ferris wheel</td></tr>
+            </tbody>
+          </table>
+          <p class="note">Labels on the turntables show each asset's measured height and its tier. A <span class="chip bad">target</span> chip means the asset reads smaller than the tier it is meant to be.</p>
+        </div>
+        <h2>Approve the board</h2>
+        <div class="card pad">
+          <ul class="check">
+            <li>Golden hour reads warm with cool, tinted shade (not grey).</li>
+            <li>Night: windows, lanterns and the lab orb glow.</li>
+            <li>Value check: ground light, buildings mid, darks reserved.</li>
+            <li>Only accents pop. Nothing else shouts.</li>
+            <li>Each landmark has a silhouette you'd know at 64 px.</li>
+          </ul>
+        </div>
+      </section>
+    </div>
+  </main>
+  <script type="module" src="./src/style.js"></script>
+</body>
+</html>

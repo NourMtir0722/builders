@@ -1,0 +1,13 @@
+{
+  "name": "builderland",
+  "version": "1.0.0",
+  "description": "A hand-drawn, procedural land for builders. Plots for people, buildings for tools, everything editable. Runs in the browser.",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "dev": "npx serve .",
+    "build": "node scripts/build.mjs",
+    "deploy": "npm run build && npx wrangler deploy"
+  },
+  "keywords": ["threejs", "procedural", "generative", "isometric", "diorama", "city-builder", "hand-drawn", "webgl"]
+}
