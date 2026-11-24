@@ -74,7 +74,7 @@ export function welcomeSign(title, count) {
   g.font = `600 ${fs}px "Fredoka", system-ui`;
   while (g.measureText(title).width > 460 && fs > 30) g.font = `600 ${(fs -= 4)}px "Fredoka", system-ui`;
   g.fillText(title, 256, 118);
-  g.font = '500 34px "Fredoka", system-ui'; g.fillText(`${count} builders · claim a plot`, 256, 182);
+  g.font = '500 34px "Fredoka", system-ui'; g.fillText(`${count} builders`, 256, 182);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
   const m = ownToon({ map: t });
   const g2 = new THREE.Group();

@@ -63,7 +63,7 @@ await Promise.race([document.fonts.load('600 64px Fredoka'), new Promise((r) => 
 const land = createLand($('stage'), landConfig(), { onSelect: showCard });
 window.builderland = land;
 if (embed) document.body.classList.add('hide-ui');
-const refreshHeader = () => { $('count').textContent = builders().length; $('landTitle').textContent = state.title; document.title = state.title; };
+const refreshHeader = () => { document.title = state.title; };
 refreshHeader();
 const deep = location.hash.match(/r=([^&]+)/);
 // #r=<id> glides to a builder or place; add &snap to jump there at once (handy for screenshots)
@@ -91,11 +91,16 @@ function showCard(sel) {
   $('resRole').textContent = sel.type === 'sign' ? 'Sponsor · the blimp' : isPlace ? KIND_LABEL[d.kind] : d.role;
   $('resBar').style.background = d.color;
   $('resLinks').innerHTML = '';
-  const links = isPlace ? (d.url ? [{ label: 'Visit', url: d.url }] : []) : d.links;
-  for (const l of links) {
+  if (isPlace && d.url) {
     const a = document.createElement('a');
-    a.className = 'btn sm'; a.href = l.url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = `${l.label} ↗`;
+    a.className = 'btn sm'; a.href = d.url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Visit ↗';
     $('resLinks').appendChild(a);
+  }
+  // Builder links are shown as labels only; they don't navigate anywhere.
+  if (!isPlace) for (const l of d.links) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'btn sm'; b.textContent = l.label;
+    $('resLinks').appendChild(b);
   }
   if (isPlace && d.note) { const p = document.createElement('div'); p.className = 'hint'; p.textContent = d.note; $('resLinks').appendChild(p); }
   $('resWork').innerHTML = '';
@@ -415,7 +420,7 @@ async function shareCard() {
   } else {
     card(40, H - 190, 600, 150);
     g.fillStyle = ink; g.font = '600 56px Fredoka, system-ui'; g.fillText(state.title, 70, H - 110);
-    g.fillStyle = '#7D7164'; g.font = '500 26px Fredoka, system-ui'; g.fillText(`${builders().length} builders live here · claim a plot`, 72, H - 66);
+    g.fillStyle = '#7D7164'; g.font = '500 26px Fredoka, system-ui'; g.fillText(`${builders().length} builders live here`, 72, H - 66);
   }
   card(W - 330, 30, 290, 58);
   g.fillStyle = ink; g.font = '500 24px Fredoka, system-ui'; g.fillText('✿ made with Builderland', W - 306, 68);
@@ -423,18 +428,6 @@ async function shareCard() {
   toast('Share card saved');
 }
 
-// ── claim a plot ──
-let chosen = COLORS[0];
-for (const c of COLORS) {
-  const b = document.createElement('button');
-  b.type = 'button'; b.style.background = c; b.setAttribute('aria-label', `Colour ${c}`); b.setAttribute('aria-pressed', c === chosen);
-  b.onclick = () => { chosen = c; for (const x of $('cColors').children) x.setAttribute('aria-pressed', x === b); };
-  $('cColors').appendChild(b);
-}
-const openClaim = () => { $('claim').classList.add('on'); $('cName').focus(); };
-$('claimBtn').onclick = openClaim;
-$('tClaim').onclick = openClaim;
-$('cCancel').onclick = () => $('claim').classList.remove('on');
 function shrink(file, max) {
   return new Promise((res) => {
     if (!file) return res('');
@@ -452,26 +445,10 @@ function shrink(file, max) {
     img.src = url;
   });
 }
-$('claimForm').onsubmit = async (e) => {
-  e.preventDefault();
-  const name = $('cName').value.trim();
-  if (!name) return;
-  const links = [];
-  if ($('cSite').value) links.push({ label: 'Portfolio', url: $('cSite').value.trim() });
-  if ($('cSocial').value) links.push({ label: 'Social', url: $('cSocial').value.trim() });
-  const avatar = await shrink($('cAvatar').files[0], 320);
-  const images = await Promise.all([...$('cWork').files].slice(0, 3).map((f) => shrink(f, 640)));
-  const d = { id: `me-${Date.now().toString(36)}`, name, role: $('cRole').value.trim() || 'Builder', color: chosen, links, avatar, images };
-  state.mine.push(d);
-  $('claim').classList.remove('on');
-  $('claimForm').reset();
-  rebuild({ now: true, focusId: d.id });
-  toast(`Welcome to ${state.title}, ${name.split(' ')[0]} ✿`);
-};
 
 addEventListener('keydown', (e) => {
   if (e.target.matches('input, textarea, select')) return;
-  if (e.key === 'Escape') { $('claim').classList.remove('on'); $('find').classList.remove('on'); land.unfocus(); }
+  if (e.key === 'Escape') { $('find').classList.remove('on'); land.unfocus(); }
   if (e.key === 'h' || e.key === 'H') document.body.classList.toggle('hide-ui');
   if (e.key === 'b' || e.key === 'B') $('tBuild').click();
   if ((e.key === 'e' || e.key === 'E') && !editor.open) editor.toggle(true);

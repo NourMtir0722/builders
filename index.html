@@ -38,10 +38,7 @@
     .btn.go { background: var(--green); color: #FFFDF6; }
     .btn.sm { padding: 5px 10px; font-size: 13px; }
 
-    #title { position: fixed; top: 16px; left: 16px; padding: 14px 16px; width: 300px; max-width: calc(100vw - 32px); }
-    #title h1 { margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.01em; }
-    #title p { margin: 4px 0 12px; color: var(--muted); font-size: 14px; line-height: 1.35; }
-    #title .row { display: flex; gap: 8px; }
+    #title { position: fixed; top: 16px; left: 16px; }
 
     #resident { position: fixed; top: 200px; left: 16px; width: 300px; max-width: calc(100vw - 32px); padding: 14px; display: none; }
     #resident.on { display: block; }
@@ -71,19 +68,6 @@
     #find li img { width: 30px; height: 30px; border: 2px solid var(--ink); border-radius: 8px; }
     #find li small { color: var(--muted); }
 
-    #claim { position: fixed; inset: 0; background: rgba(43,37,48,.35); display: none; place-items: center; z-index: 5; }
-    #claim.on { display: grid; }
-    #claim form { width: 420px; max-width: calc(100vw - 32px); max-height: calc(100vh - 32px); overflow: auto; padding: 18px; }
-    #claim h2 { margin: 0 0 2px; font-size: 22px; }
-    #claim .sub { color: var(--muted); font-size: 14px; margin-bottom: 8px; }
-    #claim label { display: block; margin-top: 12px; font-size: 14px; font-weight: 500; }
-    #claim input[type=text], #claim input[type=url] { width: 100%; margin-top: 5px; border: 2.5px solid var(--ink); border-radius: 10px; padding: 8px 10px; font-size: 15px; background: #fff; outline: none; }
-    #claim .swatches { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
-    #claim .swatches button { width: 30px; height: 30px; border-radius: 8px; border: 2.5px solid var(--ink); cursor: pointer; }
-    #claim .swatches button[aria-pressed=true] { outline: 3px solid var(--ink); outline-offset: 2px; }
-    #claim .file { display: flex; gap: 8px; align-items: center; margin-top: 6px; font-size: 13px; color: var(--muted); }
-    #claim .actions { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
-    #claim .note { font-size: 12px; color: var(--muted); margin-top: 10px; }
 
 
     #build { position: fixed; top: 16px; right: 16px; bottom: 100px; width: 340px; max-width: calc(100vw - 32px); display: none; flex-direction: column; overflow: hidden; }
@@ -145,14 +129,9 @@
 <body>
   <div id="stage"></div>
 
-  <section id="title" class="card">
-    <h1 id="landTitle">Builderland</h1>
-    <p><span id="count">0</span> builders live here. Every plot is a person, every building a tool. Build your own land with ⚙ Build.</p>
-    <div class="row">
-      <button class="btn go" id="claimBtn">✿ Claim a plot</button>
-      <button class="btn" id="tourBtn">Take a walk</button>
-    </div>
-  </section>
+  <div id="title">
+    <button class="btn" id="tourBtn">Take a walk</button>
+  </div>
 
   <section id="resident" class="card" aria-live="polite">
     <button class="x" id="closeRes" aria-label="Close">✕</button>
@@ -176,7 +155,6 @@
   <nav id="toolbar" class="card" aria-label="Tools">
     <button id="tOverview"><span class="i">🗺</span>Overview</button>
     <button id="tFind"><span class="i">⌕</span>Find</button>
-    <button id="tClaim"><span class="i">✿</span>Claim</button>
     <button id="tLight"><span class="i" id="lightIcon">☾</span><span id="lightLabel">Night</span></button>
     <button id="tEdit"><span class="i">✎</span>Edit</button>
     <button id="tBuild"><span class="i">⚙</span>Build</button>
@@ -196,25 +174,6 @@
     <input id="findInput" placeholder="Find a designer…" autocomplete="off" />
     <ul id="findList"></ul>
   </section>
-
-  <div id="claim" role="dialog" aria-modal="true" aria-labelledby="claimTitle">
-    <form class="card" id="claimForm">
-      <h2 id="claimTitle">Claim a plot</h2>
-      <div class="sub">You get a 2×2 garden: your face on a paper standee, your work on an easel, your links on a signpost.</div>
-      <label>Name<input type="text" id="cName" required maxlength="40" placeholder="Your name" /></label>
-      <label>What you do<input type="text" id="cRole" maxlength="40" placeholder="Product designer" /></label>
-      <label>Your colour<div class="swatches" id="cColors"></div></label>
-      <label>Avatar <span class="file"><input type="file" id="cAvatar" accept="image/*" /> optional. We'll draw you one otherwise.</span></label>
-      <label>Work (up to 3 images) <span class="file"><input type="file" id="cWork" accept="image/*" multiple /></span></label>
-      <label>Portfolio<input type="url" id="cSite" placeholder="https://…" /></label>
-      <label>X / Instagram / Dribbble<input type="url" id="cSocial" placeholder="https://…" /></label>
-      <div class="actions">
-        <button type="button" class="btn" id="cCancel">Cancel</button>
-        <button type="submit" class="btn go">Move in ✿</button>
-      </div>
-      <div class="note">Preview build: your plot is saved in this browser only. Public sign-ups come next.</div>
-    </form>
-  </div>
 
   <div id="credit" class="card">made by <a href="https://x.com/noormtir" target="_blank" rel="noopener">@noormtir</a> · <a href="https://donate.stripe.com/9B68wPcAl5vQdtOgqmfrW0g" target="_blank" rel="noopener">buy me a coffee ☕</a></div>
   <div id="toast" class="card"></div>
